@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@400;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#000;--fg:#fff;--mut:#8f8f8f;--line:#2a2a2a;--sur:#141414;--red:#ff5b00;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--fg);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+.dot{font-family:"Doto","Courier New",monospace;font-weight:800}
+header{display:flex;align-items:center;gap:8px;padding:14px 16px 10px}
+header h1{margin:0;font-size:34px;line-height:1;flex:1;letter-spacing:.5px;text-shadow:0 0 16px rgba(255,91,0,.6)}
+header small{display:block;font:14px system-ui,sans-serif;color:var(--mut);margin-top:6px;letter-spacing:0}
+.btn{border:1px solid var(--line);background:none;color:var(--fg);border-radius:999px;height:40px;min-width:40px;padding:0 16px;font:inherit;font-size:15px;cursor:pointer}
+.btn:focus-visible,.nav button:focus-visible,.t:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.btn.red{background:var(--red);border-color:var(--red);color:#000;font-size:24px;font-weight:700;padding:0;box-shadow:0 0 18px rgba(255,91,0,.55)}
+main{flex:1;overflow-y:auto;padding:0 0 24px;-webkit-overflow-scrolling:touch}
+h2{font-size:15px;font-weight:600;margin:18px 16px 8px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:0 2px}
+.t{position:relative;aspect-ratio:1;background:var(--sur);border:0;padding:0;cursor:pointer;overflow:hidden}
+.t img{width:100%;height:100%;object-fit:cover;display:block}
+.t .f{position:absolute;right:6px;bottom:6px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 10px 2px var(--red)}
+.t .c{position:absolute;left:6px;top:6px;width:22px;height:22px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.35);display:none}
+.sel .t .c{display:block}
+.t.on .c{background:var(--red);border-color:var(--red);box-shadow:0 0 14px 2px var(--red)}
+.t.on{box-shadow:inset 0 0 0 2px var(--red)}
+.t.on img{transform:scale(.86)}
+.albums{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:6px 16px}
+.al{border:0;background:none;color:inherit;text-align:left;padding:0;cursor:pointer;font:inherit}
+.al .cv{aspect-ratio:1;background:var(--sur);border-radius:14px;overflow:hidden;display:grid;place-items:center;color:var(--mut);font-size:34px}
+.al .cv img{width:100%;height:100%;object-fit:cover}
+.al b{display:block;margin-top:6px;font-weight:600}
+.al span{color:var(--mut);font-size:14px}
+.empty{margin:18vh 32px 0;text-align:center;color:var(--mut)}
+.empty .dot{display:block;font-size:30px;color:var(--fg);margin-bottom:8px}
+.nav{display:flex;border-top:1px solid var(--line);background:var(--bg)}
+.nav button{flex:1;border:0;background:none;color:var(--mut);padding:12px 0 10px;font:inherit;font-size:15px;cursor:pointer;position:relative}
+.nav button.on{color:var(--fg);font-weight:600}
+.nav button.on::after{content:"";position:absolute;left:50%;bottom:4px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--red);box-shadow:0 0 10px 3px var(--red)}
+.bar{display:none;border-top:1px solid var(--line);background:var(--bg);padding:8px 12px;gap:8px;justify-content:space-around}
+.sel .bar{display:flex}.sel .nav{display:none}
+#v{position:fixed;inset:0;background:#000;color:#fff;display:none;flex-direction:column;z-index:5;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+#v.show{display:flex}
+#v .top,#v .bot{display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
+#v .btn{color:#fff;border-color:#333}
+#v .stage{flex:1;min-height:0;display:grid;place-items:center;touch-action:pan-y}
+#v img{max-width:100%;max-height:100%;object-fit:contain}
+#v .on{color:var(--red);border-color:var(--red);box-shadow:0 0 14px rgba(255,91,0,.55)}
+#sh{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;z-index:9}
+#sh.show{display:flex}
+#sh .box{width:100%;background:var(--bg);color:var(--fg);border-radius:24px 24px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px));max-height:70%;overflow:auto}
+#sh h3{margin:0 0 12px;font-size:22px}
+#sh .row{display:flex;width:100%;justify-content:space-between;border:0;border-bottom:1px solid var(--line);background:none;color:inherit;font:inherit;padding:14px 4px;cursor:pointer;text-align:left}
+#sh input{width:100%;height:44px;border-radius:999px;border:1px solid var(--line);background:var(--sur);color:var(--fg);padding:0 16px;font:inherit;margin:12px 0 8px}
+#sh .btn{width:100%;margin-top:6px}
+.warn{background:var(--red);border-color:var(--red);color:#000;font-weight:700}
+@media (prefers-reduced-motion:no-preference){.t img{transition:transform .15s}}
+@media (min-width:700px){.grid{grid-template-columns:repeat(6,1fr)}.albums{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <button class="btn" id="back" hidden aria-label="Back">&#8592;</button>
+  <h1 class="dot" id="ttl">Photos<small id="sub"></small></h1>
+  <button class="btn" id="selb">Select</button>
+  <button class="btn red" id="add" aria-label="Add photos">+</button>
+</header>
+<main id="main"></main>
+<div class="bar" id="bar">
+  <button class="btn" data-a="fav">Favorite</button>
+  <button class="btn" data-a="alb">Add to album</button>
+  <button class="btn" data-a="del">Delete</button>
+</div>
+<nav class="nav" id="nav">
+  <button class="on" data-tab="photos">Photos</button>
+  <button data-tab="albums">Albums</button>
+</nav>
+<input type="file" id="file" accept="image/*" multiple hidden>
+<div id="v">
+  <div class="top"><button class="btn" id="vx">Close</button><span id="vc"></span></div>
+  <div class="stage" id="stage"><img id="vi" alt=""></div>
+  <div class="bot">
+    <button class="btn" id="vf">Favorite</button>
+    <button class="btn" id="va">Album</button>
+    <button class="btn" id="vd">Delete</button>
+  </div>
+</div>
+<div id="sh"><div class="box" id="box"></div></div>
+<script>
+const $=s=>document.querySelector(s);
+let db=null,photos=[],tab='photos',album=null,sel=null,vi=-1,list=[];
+const urls={};
+const FAV='Favorites';
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open('gallery',1);r.onupgradeneeded=()=>r.result.createObjectStore('p',{keyPath:'id',autoIncrement:true});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function tx(m,f){return new Promise((res,rej)=>{if(!db)return res(null);const t=db.transaction('p',m);const q=f(t.objectStore('p'));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)})}
+let names=[];
+try{names=JSON.parse(localStorage.getItem('albums')||'[]')}catch(e){}
+function saveNames(){try{localStorage.setItem('albums',JSON.stringify(names))}catch(e){}}
+function allAlbums(){const s=new Set(names);photos.forEach(p=>p.albums.forEach(a=>s.add(a)));return [...s]}
+async function init(){
+  try{db=await openDB();photos=(await tx('readonly',s=>s.getAll()))||[]}catch(e){db=null}
+  photos.forEach(p=>{urls[p.id]=URL.createObjectURL(p.blob)});
+  sortP();render();
+}
+function sortP(){photos.sort((a,b)=>b.date-a.date)}
+async function addFiles(files){
+  for(const f of files){
+    if(!f.type.startsWith('image/'))continue;
+    const r={blob:f,name:f.name,date:f.lastModified||Date.now(),fav:false,albums:[]};
+    if(album&&album!==FAV)r.albums.push(album);
+    if(album===FAV)r.fav=true;
+    try{const id=await tx('readwrite',s=>s.add(r));r.id=id||Date.now()+Math.random()}catch(e){r.id=Date.now()+Math.random()}
+    urls[r.id]=URL.createObjectURL(f);photos.push(r);
+  }
+  sortP();render();
+}
+const save=r=>tx('readwrite',s=>s.put(r)).catch(()=>{});
+function visible(){
+  if(album===FAV)return photos.filter(p=>p.fav);
+  if(album)return photos.filter(p=>p.albums.includes(album));
+  return photos;
+}
+function label(ts){
+  const d=new Date(ts),n=new Date(),k=x=>new Date(x).setHours(0,0,0,0);
+  const diff=Math.round((k(n)-k(d))/864e5);
+  if(diff===0)return'Today';if(diff===1)return'Yesterday';
+  return d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
+}
+function render(){
+  const m=$('#main'),inAlb=tab==='albums'&&album===null;
+  list=visible();
+  $('#back').hidden=!(tab==='albums'&&album!==null);
+  $('#ttl').firstChild.nodeValue=tab==='photos'?'Photos':(album===null?'Albums':album);
+  $('#sub').textContent=inAlb?'':list.length+(list.length===1?' photo':' photos');
+  $('#selb').hidden=inAlb;
+  $('#selb').textContent=sel?'Cancel':'Select';
+  document.body.classList.toggle('sel',!!sel);
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  if(inAlb){
+    const cards=[FAV,...allAlbums()].map(n=>{
+      const ps=n===FAV?photos.filter(p=>p.fav):photos.filter(p=>p.albums.includes(n));
+      return `<button class="al" data-al="${esc(n)}"><div class="cv">${ps[0]?`<img src="${urls[ps[0].id]}" alt="">`:'&#9711;'}</div><b>${esc(n)}</b><span>${ps.length}</span></button>`}).join('');
+    m.innerHTML=`<div class="albums">${cards}<button class="al" data-new="1"><div class="cv dot">+</div><b>New album</b></button></div>`;
+    return;
+  }
+  if(!list.length){m.innerHTML=`<div class="empty"><span class="dot">No photos yet</span>Tap + to add photos from your phone.</div>`;return}
+  let h='',cur='';
+  list.forEach((p,i)=>{
+    const l=label(p.date);
+    if(l!==cur){if(cur)h+='</div>';h+=`<h2>${l}</h2><div class="grid">`;cur=l}
+    h+=`<button class="t${sel&&sel.has(p.id)?' on':''}" data-i="${i}"><img loading="lazy" src="${urls[p.id]}" alt=""><span class="c"></span>${p.fav?'<span class="f"></span>':''}</button>`;
+  });
+  m.innerHTML=h+'</div>';
+}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+/* events */
+$('#main').addEventListener('click',e=>{
+  const t=e.target.closest('.t'),a=e.target.closest('.al');
+  if(t){const p=list[+t.dataset.i];
+    if(sel){sel.has(p.id)?sel.delete(p.id):sel.add(p.id);render()}else openViewer(+t.dataset.i)}
+  else if(a){
+    if(a.dataset.new)return askAlbum(null);
+    album=a.dataset.al;render();
+  }
+});
+let pressT;
+$('#main').addEventListener('touchstart',e=>{const t=e.target.closest('.t');if(!t||sel)return;pressT=setTimeout(()=>{sel=new Set([list[+t.dataset.i].id]);render()},450)},{passive:true});
+['touchend','touchmove','touchcancel'].forEach(ev=>$('#main').addEventListener(ev,()=>clearTimeout(pressT),{passive:true}));
+$('#nav').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.tab;album=null;sel=null;render()});
+$('#back').onclick=()=>{album=null;sel=null;render()};
+$('#selb').onclick=()=>{sel=sel?null:new Set();render()};
+$('#add').onclick=()=>$('#file').click();
+$('#file').onchange=e=>{addFiles([...e.target.files]);e.target.value=''};
+$('#bar').addEventListener('click',e=>{
+  const a=e.target.closest('button')?.dataset.a;if(!a||!sel||!sel.size)return;
+  const ids=[...sel];
+  if(a==='fav')toggleFav(ids);
+  if(a==='alb')askAlbum(ids);
+  if(a==='del')askDelete(ids);
+});
+async function toggleFav(ids){
+  const ps=photos.filter(p=>ids.includes(p.id)),to=!ps.every(p=>p.fav);
+  for(const p of ps){p.fav=to;await save(p)}
+  sel=null;render();if(vi>=0)showV();
+}
+/* sheets */
+function sheet(html){$('#box').innerHTML=html;$('#sh').classList.add('show')}
+function closeSheet(){$('#sh').classList.remove('show')}
+$('#sh').addEventListener('click',e=>{if(e.target.id==='sh'||e.target.closest('[data-close]'))closeSheet()});
+function askAlbum(ids){
+  const rows=ids?allAlbums().map(n=>`<button class="row" data-pick="${esc(n)}"><span>${esc(n)}</span></button>`).join(''):'';
+  sheet(`<h3 class="dot">${ids?'Add to album':'New album'}</h3>${rows}<input id="nn" placeholder="Album name" maxlength="40"><button class="btn" id="mk">Create album</button><button class="btn" data-close>Cancel</button>`);
+  $('#box').onclick=async e=>{
+    const pk=e.target.closest('[data-pick]');
+    if(pk&&ids){await addTo(ids,pk.dataset.pick)}
+    if(e.target.id==='mk'){
+      const n=$('#nn').value.trim();if(!n||n===FAV)return;
+      if(!names.includes(n)){names.push(n);saveNames()}
+      if(ids)await addTo(ids,n);else{closeSheet();render()}
+    }
+  };
+}
+async function addTo(ids,n){
+  for(const p of photos.filter(p=>ids.includes(p.id))){if(!p.albums.includes(n)){p.albums.push(n);await save(p)}}
+  closeSheet();sel=null;render();if(vi>=0)showV();
+}
+function askDelete(ids){
+  sheet(`<h3 class="dot">Delete ${ids.length} ${ids.length===1?'photo':'photos'}?</h3><p style="color:var(--mut);margin:0 0 8px">They are removed from this app. Your original files on the phone are not touched.</p><button class="btn warn" id="ok">Delete</button><button class="btn" data-close>Cancel</button>`);
+  $('#box').onclick=async e=>{
+    if(e.target.id!=='ok')return;
+    for(const id of ids){await tx('readwrite',s=>s.delete(id)).catch(()=>{});URL.revokeObjectURL(urls[id]);delete urls[id]}
+    photos=photos.filter(p=>!ids.includes(p.id));
+    closeSheet();sel=null;
+    if(vi>=0){list=visible();if(!list.length)closeV();else{vi=Math.min(vi,list.length-1);showV()}}
+    render();
+  };
+}
+/* viewer */
+function openViewer(i){vi=i;$('#v').classList.add('show');showV()}
+function closeV(){vi=-1;$('#v').classList.remove('show');render()}
+function showV(){
+  list=visible();const p=list[vi];if(!p)return;
+  $('#vi').src=urls[p.id];
+  $('#vc').textContent=(vi+1)+' / '+list.length;
+  $('#vf').classList.toggle('on',p.fav);
+  $('#vf').textContent=p.fav?'Favorited':'Favorite';
+}
+function step(d){const n=vi+d;if(n>=0&&n<list.length){vi=n;showV()}}
+$('#vx').onclick=closeV;
+$('#vf').onclick=()=>toggleFav([list[vi].id]);
+$('#va').onclick=()=>askAlbum([list[vi].id]);
+$('#vd').onclick=()=>askDelete([list[vi].id]);
+let sx=0;
+$('#stage').addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});
+$('#stage').addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)step(dx<0?1:-1)});
+document.addEventListener('keydown',e=>{if(vi<0)return;if(e.key==='ArrowRight')step(1);if(e.key==='ArrowLeft')step(-1);if(e.key==='Escape')closeV()});
+if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+init();
+</script>
+</body>
+</html>
